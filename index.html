@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工程文件送審管理系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --c-navy: #0f2744;
+    --c-navy-mid: #1a3a5c;
+    --c-navy-light: #2563a8;
+    --c-gold: #c9922a;
+    --c-gold-light: #e8b84b;
+    --c-gold-pale: #fdf3dc;
+    --c-green: #1a7a4a;
+    --c-green-light: #e8f7ef;
+    --c-red: #c0392b;
+    --c-red-light: #fdecea;
+    --c-orange: #d4611a;
+    --c-orange-light: #fef0e6;
+    --c-blue-light: #e8f0fb;
+    --c-gray-100: #f5f6f8;
+    --c-gray-200: #eaedf1;
+    --c-gray-300: #d0d5de;
+    --c-gray-500: #8896aa;
+    --c-gray-700: #4a5568;
+    --c-gray-900: #1e2532;
+    --c-white: #ffffff;
+    --shadow-sm: 0 1px 4px rgba(15,39,68,0.08);
+    --shadow-md: 0 4px 16px rgba(15,39,68,0.12);
+    --shadow-lg: 0 8px 32px rgba(15,39,68,0.16);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --font-main: 'Noto Sans TC', sans-serif;
+    --font-serif: 'Noto Serif TC', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-main);
+    background: var(--c-gray-100);
+    color: var(--c-gray-900);
+    min-height: 100vh;
+  }
+
+  /* === SCREENS === */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* === LOGIN === */
+  #loginScreen {
+    background: linear-gradient(145deg, var(--c-navy) 0%, var(--c-navy-mid) 60%, #1e4d8c 100%);
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #loginScreen::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,146,42,0.15) 0%, transparent 70%);
+    top: -200px; right: -100px;
+  }
+  #loginScreen::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(37,99,168,0.3) 0%, transparent 70%);
+    bottom: -100px; left: -100px;
+  }
+  .login-card {
+    background: var(--c-white);
+    border-radius: var(--radius-lg);
+    padding: 48px 48px 40px;
+    width: 420px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    z-index: 1;
+  }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .login-logo-icon {
+    width: 64px; height: 64px;
+    background: var(--c-navy);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .login-logo-icon svg { width: 36px; height: 36px; fill: var(--c-gold); }
+  .login-logo h1 {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--c-navy);
+    line-height: 1.4;
+  }
+  .login-logo p {
+    font-size: 13px;
+    color: var(--c-gray-500);
+    margin-top: 4px;
+  }
+  .form-group { margin-bottom: 20px; }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--c-gray-700);
+    margin-bottom: 8px;
+  }
+  .form-group select, .form-group input {
+    width: 100%;
+    height: 44px;
+    border: 1.5px solid var(--c-gray-300);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    font-size: 14px;
+    font-family: var(--font-main);
+    color: var(--c-gray-900);
+    background: var(--c-white);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group select:focus, .form-group input:focus {
+    border-color: var(--c-navy-light);
+    box-shadow: 0 0 0 3px rgba(37,99,168,0.1);
+  }
+  .btn-login {
+    width: 100%;
+    height: 48px;
+    background: var(--c-navy);
+    color: var(--c-white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: var(--font-main);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-login:hover { background: var(--c-navy-mid); }
+  .btn-login:active { transform: scale(0.98); }
+  .login-error {
+    background: var(--c-red-light);
+    color: var(--c-red);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* === MAIN APP === */
+  #appScreen { flex-direction: row; }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--c-navy);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--c-gold-light);
+    line-height: 1.5;
+  }
+  .sidebar-logo span {
+    display: block;
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.45);
+    margin-top: 2px;
+    font-family: var(--font-main);
+  }
+  .user-info {
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.05);
+    margin: 16px 12px;
+    border-radius: var(--radius-md);
+  }
+  .user-info .user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--c-white);
+  }
+  .user-info .user-unit {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 4px;
+  }
+  .user-info .user-role-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+  .badge-contractor { background: rgba(201,146,42,0.25); color: var(--c-gold-light); }
+  .badge-supervisor { background: rgba(26,122,74,0.25); color: #5dd696; }
+  .badge-owner-site { background: rgba(37,99,168,0.35); color: #7eb8f7; }
+  .badge-owner-hq { background: rgba(150,60,180,0.25); color: #d198f0; }
+
+  nav { flex: 1; padding: 8px 12px; }
+  .nav-section {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.3);
+    padding: 12px 8px 6px;
+    font-weight: 500;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: var(--c-white); }
+  .nav-item.active { background: rgba(201,146,42,0.2); color: var(--c-gold-light); }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .btn-logout {
+    width: 100%;
+    padding: 10px;
+    background: rgba(192,57,43,0.15);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: var(--radius-sm);
+    color: #ff8a8a;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-logout:hover { background: rgba(192,57,43,0.25); }
+
+  /* Main content */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 100vh;
+  }
+  .topbar {
+    background: var(--c-white);
+    border-bottom: 1px solid var(--c-gray-200);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--c-navy);
+  }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .page { display: none; flex: 1; overflow-y: auto; padding: 28px; }
+  .page.active { display: block; }
+
+  /* === DASHBOARD === */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--c-white);
+    border-radius: var(--radius-md);
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--c-gray-200);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 0 0 0 0;
+  }
+  .stat-card.total::before { background: var(--c-navy); }
+  .stat-card.approved::before { background: var(--c-green); }
+  .stat-card.reviewing::before { background: var(--c-gold); }
+  .stat-card.returned::before { background: var(--c-red); }
+
+  .stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--c-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+  .stat-number {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-card.total .stat-number { color: var(--c-navy); }
+  .stat-card.approved .stat-number { color: var(--c-green); }
+  .stat-card.reviewing .stat-number { color: var(--c-gold); }
+  .stat-card.returned .stat-number { color: var(--c-red); }
+  .stat-sub {
+    font-size: 12px;
+    color: var(--c-gray-500);
+    margin-top: 8px;
+  }
+
+  /* Chart row */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: var(--c-white);
+    border-radius: var(--radius-md);
+    padding: 22px 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--c-gray-200);
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-navy);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title svg { width: 16px; height: 16px; color: var(--c-gray-500); }
+
+  /* Recent docs table */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--c-navy);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    padding: 10px 14px;
+    background: var(--c-gray-100);
+    border-bottom: 1px solid var(--c-gray-200);
+  }
+  th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+  th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+  td {
+    padding: 13px 14px;
+    font-size: 13.5px;
+    border-bottom: 1px solid var(--c-gray-200);
+    color: var(--c-gray-700);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--c-gray-100); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .status-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-approved { background: var(--c-green-light); color: var(--c-green); }
+  .status-approved .dot { background: var(--c-green); }
+  .status-reviewing { background: var(--c-gold-pale); color: var(--c-gold); }
+  .status-reviewing .dot { background: var(--c-gold); }
+  .status-returned { background: var(--c-red-light); color: var(--c-red); }
+  .status-returned .dot { background: var(--c-red); }
+  .status-pending { background: var(--c-blue-light); color: var(--c-navy-light); }
+  .status-pending .dot { background: var(--c-navy-light); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-main);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--c-navy);
+    color: var(--c-white);
+  }
+  .btn-primary:hover { background: var(--c-navy-mid); }
+  .btn-gold {
+    background: var(--c-gold);
+    color: var(--c-white);
+  }
+  .btn-gold:hover { background: #b07d1d; }
+  .btn-outline {
+    background: transparent;
+    border-color: var(--c-gray-300);
+    color: var(--c-gray-700);
+  }
+  .btn-outline:hover { border-color: var(--c-navy-light); color: var(--c-navy); }
+  .btn-danger { background: var(--c-red); color: var(--c-white); }
+  .btn-danger:hover { background: #a93226; }
+  .btn-success { background: var(--c-green); color: var(--c-white); }
+  .btn-success:hover { background: #145f38; }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* === FORM === */
+  .form-card {
+    background: var(--c-white);
+    border-radius: var(--radius-md);
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--c-gray-200);
+    margin-bottom: 20px;
+  }
+  .form-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--c-navy);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--c-gray-200);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-full { grid-column: 1 / -1; }
+  label.field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 7px;
+  }
+  label.field-label .req { color: var(--c-red); }
+  .field-input, .field-select, .field-textarea {
+    width: 100%;
+    border: 1.5px solid var(--c-gray-300);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: var(--font-main);
+    color: var(--c-gray-900);
+    background: var(--c-white);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .field-input:focus, .field-select:focus, .field-textarea:focus {
+    border-color: var(--c-navy-light);
+    box-shadow: 0 0 0 3px rgba(37,99,168,0.1);
+  }
+  .field-textarea { min-height: 100px; resize: vertical; }
+  .file-upload-area {
+    border: 2px dashed var(--c-gray-300);
+    border-radius: var(--radius-md);
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .file-upload-area:hover { border-color: var(--c-navy-light); background: var(--c-blue-light); }
+  .file-upload-area input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .file-upload-icon { font-size: 32px; margin-bottom: 10px; }
+  .file-upload-text { font-size: 14px; color: var(--c-gray-700); }
+  .file-upload-hint { font-size: 12px; color: var(--c-gray-500); margin-top: 4px; }
+  .uploaded-files { margin-top: 12px; }
+  .uploaded-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--c-gray-100);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--c-gray-700);
+  }
+  .uploaded-file svg { width: 16px; height: 16px; color: var(--c-navy-light); }
+  .uploaded-file .remove { margin-left: auto; cursor: pointer; color: var(--c-red); font-size: 16px; }
+
+  /* === TIMELINE === */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: var(--c-gray-200);
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .timeline-dot {
+    position: absolute;
+    left: -24px; top: 4px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--c-white);
+  }
+  .timeline-dot.done { background: var(--c-green); border-color: var(--c-green); }
+  .timeline-dot.active { background: var(--c-gold); border-color: var(--c-gold); animation: pulse 1.5s infinite; }
+  .timeline-dot.pending { background: var(--c-white); border-color: var(--c-gray-300); }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,146,42,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(201,146,42,0); }
+  }
+  .timeline-content { padding: 0 0 0 4px; }
+  .timeline-unit {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-navy);
+  }
+  .timeline-time {
+    font-size: 11px;
+    color: var(--c-gray-500);
+    margin-top: 2px;
+  }
+  .timeline-note {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: var(--c-red-light);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    color: var(--c-red);
+    border-left: 3px solid var(--c-red);
+  }
+
+  /* Flow diagram */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 20px 0;
+    overflow-x: auto;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 110px;
+  }
+  .flow-node {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .flow-node.done { background: var(--c-green-light); border-color: var(--c-green); color: var(--c-green); }
+  .flow-node.active { background: var(--c-gold-pale); border-color: var(--c-gold); color: var(--c-gold); }
+  .flow-node.pending { background: var(--c-gray-100); border-color: var(--c-gray-300); color: var(--c-gray-500); }
+  .flow-arrow {
+    flex: 1;
+    height: 2px;
+    background: var(--c-gray-300);
+    position: relative;
+    min-width: 20px;
+    margin-top: -32px;
+  }
+  .flow-label { font-size: 11px; color: var(--c-gray-500); margin-top: 8px; text-align: center; max-width: 90px; line-height: 1.3; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,39,68,0.6);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--c-white);
+    border-radius: var(--radius-lg);
+    width: 640px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--c-gray-200);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; color: var(--c-navy); }
+  .modal-subtitle { font-size: 12px; color: var(--c-gray-500); margin-top: 4px; }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--c-gray-100);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--c-gray-700);
+    flex-shrink: 0;
+  }
+  .modal-body { padding: 24px 28px; }
+  .modal-footer {
+    padding: 16px 28px;
+    border-top: 1px solid var(--c-gray-200);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* Review action panel */
+  .review-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .review-action-btn {
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 2px solid;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-main);
+    transition: all 0.2s;
+  }
+  .review-action-btn.approve {
+    border-color: var(--c-green);
+    color: var(--c-green);
+    background: var(--c-green-light);
+  }
+  .review-action-btn.approve:hover { background: var(--c-green); color: var(--c-white); }
+  .review-action-btn.return {
+    border-color: var(--c-red);
+    color: var(--c-red);
+    background: var(--c-red-light);
+  }
+  .review-action-btn.return:hover { background: var(--c-red); color: var(--c-white); }
+  .review-action-btn svg { display: block; margin: 0 auto 8px; width: 24px; height: 24px; }
+
+  /* Alert */
+  .alert {
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .alert-info { background: var(--c-blue-light); color: var(--c-navy-light); border-left: 3px solid var(--c-navy-light); }
+  .alert-warning { background: var(--c-gold-pale); color: #8a5a0a; border-left: 3px solid var(--c-gold); }
+  .alert svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-bar input, .filter-bar select {
+    height: 38px;
+    border: 1.5px solid var(--c-gray-300);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: var(--font-main);
+    outline: none;
+    background: var(--c-white);
+    color: var(--c-gray-900);
+  }
+  .filter-bar input { flex: 1; min-width: 180px; }
+  .filter-bar input:focus, .filter-bar select:focus {
+    border-color: var(--c-navy-light);
+  }
+
+  /* Progress bar */
+  .progress-wrap { background: var(--c-gray-200); border-radius: 4px; height: 8px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .progress-green { background: var(--c-green); }
+  .progress-gold { background: var(--c-gold); }
+  .progress-red { background: var(--c-red); }
+
+  /* Doc number */
+  .doc-number { font-weight: 600; color: var(--c-navy); font-family: monospace; font-size: 13px; }
+  .doc-link { cursor: pointer; color: var(--c-navy-light); text-decoration: underline; }
+  .doc-link:hover { color: var(--c-navy); }
+
+  /* Mini stat inside table */
+  .unit-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .unit-contractor { background: rgba(201,146,42,0.15); color: #8a6010; }
+  .unit-supervisor { background: rgba(26,122,74,0.15); color: var(--c-green); }
+  .unit-owner-site { background: rgba(37,99,168,0.15); color: var(--c-navy-light); }
+  .unit-owner-hq { background: rgba(150,60,180,0.15); color: #8a4fb0; }
+
+  /* Notification dot */
+  .nav-badge {
+    background: var(--c-red);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--c-gray-500);
+  }
+  .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state p { font-size: 14px; }
+
+  /* Log table smaller */
+  .log-table td { font-size: 12.5px; padding: 10px 14px; }
+
+  /* Clickable file item */
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    background: var(--c-gray-100);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--c-gray-700);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .file-item:hover {
+    border-color: var(--c-navy-light);
+    background: var(--c-blue-light);
+    color: var(--c-navy);
+  }
+  .file-item .file-icon { font-size: 18px; flex-shrink: 0; }
+  .file-item .file-name { flex: 1; font-weight: 500; }
+  .file-item .file-ext {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .ext-pdf { background: #fdecea; color: #c0392b; }
+  .ext-doc { background: #e8f0fb; color: #2563a8; }
+  .ext-xls { background: #e8f7ef; color: #1a7a4a; }
+  .ext-img { background: #fdf3dc; color: #c9922a; }
+  .ext-dwg { background: #f0e8fb; color: #8a3fa0; }
+  .ext-other { background: var(--c-gray-200); color: var(--c-gray-700); }
+  .file-item .file-preview-hint {
+    font-size: 11px;
+    color: var(--c-navy-light);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  /* File viewer modal */
+  #fileViewerModal .modal { width: 860px; max-height: 92vh; }
+  .file-viewer-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--c-gray-200);
+  }
+  .file-viewer-icon { font-size: 28px; }
+  .file-viewer-title { font-size: 15px; font-weight: 600; color: var(--c-navy); flex: 1; }
+  .file-viewer-body {
+    padding: 0;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e2532;
+  }
+  .file-viewer-body iframe {
+    width: 100%;
+    height: 65vh;
+    border: none;
+    display: block;
+  }
+  .file-viewer-body img {
+    max-width: 100%;
+    max-height: 65vh;
+    object-fit: contain;
+    display: block;
+  }
+  .file-viewer-unavailable {
+    text-align: center;
+    padding: 60px 40px;
+    color: rgba(255,255,255,0.6);
+  }
+  .file-viewer-unavailable .big-icon { font-size: 56px; margin-bottom: 16px; }
+  .file-viewer-unavailable p { font-size: 14px; line-height: 1.8; }
+  .file-viewer-unavailable .filename { color: white; font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+  .file-viewer-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--c-gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .file-viewer-footer .file-meta { font-size: 12px; color: var(--c-gray-500); }
+
+  /* Sortable column headers */
+  th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  th.sortable:hover { background: var(--c-gray-200); color: var(--c-navy); }
+  th.sortable .sort-icon {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 1px;
+    vertical-align: middle;
+    margin-left: 5px;
+    opacity: 0.3;
+  }
+  th.sortable .sort-icon svg { width: 9px; height: 9px; }
+  th.sortable.asc .sort-icon svg:first-child { opacity: 1; }
+  th.sortable.asc .sort-icon { opacity: 1; }
+  th.sortable.asc .sort-icon svg:last-child { opacity: 0.2; }
+  th.sortable.desc .sort-icon { opacity: 1; }
+  th.sortable.desc .sort-icon svg:first-child { opacity: 0.2; }
+  th.sortable.desc .sort-icon svg:last-child { opacity: 1; }
+  th.sortable.asc, th.sortable.desc { color: var(--c-navy); background: var(--c-blue-light); }
+
+  /* Donut */
+  .donut-wrap { display: flex; align-items: center; gap: 28px; }
+  .donut-legend { flex: 1; }
+  .donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-label { color: var(--c-gray-700); flex: 1; }
+  .legend-value { font-weight: 600; color: var(--c-gray-900); }
+  .legend-pct { font-size: 11px; color: var(--c-gray-500); margin-left: 4px; }
+
+  canvas { display: block; }
+
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--c-gray-500);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .breadcrumb span { color: var(--c-navy-light); cursor: pointer; }
+  .breadcrumb span:hover { text-decoration: underline; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-row { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .sidebar { width: 200px; }
+  }
+
+  /* Delete button in table */
+  .btn-delete-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font-main);
+    cursor: pointer;
+    border: 1.5px solid #f5c6c2;
+    background: var(--c-red-light);
+    color: var(--c-red);
+    transition: all 0.15s;
+    margin-left: 4px;
+  }
+  .btn-delete-sm:hover { background: var(--c-red); color: white; border-color: var(--c-red); }
+  .btn-delete-sm svg { width: 13px; height: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 36 36"><path d="M18 4l14 7v10l-14 7L4 21V11L18 4z"/><path d="M18 4v24M4 11l14 7 14-7" stroke="#0f2744" stroke-width="1.5" fill="none"/></svg>
+      </div>
+      <h1>工程文件送審管理系統</h1>
+      <p>Engineering Document Review System</p>
+    </div>
+    <div class="form-group">
+      <label>帳號</label>
+      <input type="text" id="loginUser" placeholder="輸入帳號" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>密碼</label>
+      <input type="password" id="loginPass" placeholder="輸入密碼" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">登入系統</button>
+    <div class="login-error" id="loginError">帳號或密碼不正確，請重新輸入。</div>
+    <div style="margin-top:20px; padding:14px; background:#f5f6f8; border-radius:8px; font-size:12px; color:#8896aa; line-height:1.8;">
+      <strong style="color:#4a5568;">測試帳號</strong><br>
+      帳號：contractor01 ~ contractor10（密碼：1234）<br>
+      帳號：supervisor01 ~ supervisor10（密碼：1234）<br>
+      帳號：ownersite01 ~ ownersite10（密碼：1234）<br>
+      帳號：ownerhq01 ~ ownerhq10（密碼：1234）
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="appScreen" class="screen">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        工程文件送審<br>管理系統
+        <span>Engineering Document Review</span>
+      </div>
+    </div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarUserName">—</div>
+      <div class="user-unit" id="sidebarUserUnit">—</div>
+      <div class="user-role-badge" id="sidebarRoleBadge">—</div>
+    </div>
+    <nav>
+      <div class="nav-section">主要功能</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        儀表板
+      </div>
+      <div class="nav-item" id="navSubmit" onclick="showPage('submit')" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        提送文件
+      </div>
+      <div class="nav-item" onclick="showPage('doclist')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        文件清單
+        <span class="nav-badge" id="pendingBadge" style="display:none;">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('review')" id="navReview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        待審文件
+        <span class="nav-badge" id="reviewBadge">0</span>
+      </div>
+      <div class="nav-section">記錄查詢</div>
+      <div class="nav-item" onclick="showPage('log')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        傳遞記錄
+      </div>
+      <div class="nav-item" onclick="showPage('stats')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        統計報表
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        登出系統
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">儀表板</div>
+      <div class="topbar-actions">
+        <span style="font-size:12px; color:var(--c-gray-500);" id="topbarTime"></span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-label">文件總件數</div>
+          <div class="stat-number" id="statTotal">0</div>
+          <div class="stat-sub">所有送審文件</div>
+        </div>
+        <div class="stat-card approved">
+          <div class="stat-label">已核定</div>
+          <div class="stat-number" id="statApproved">0</div>
+          <div class="stat-sub">完成全程審查</div>
+        </div>
+        <div class="stat-card reviewing">
+          <div class="stat-label">審核中</div>
+          <div class="stat-number" id="statReviewing">0</div>
+          <div class="stat-sub">等待各單位審查</div>
+        </div>
+        <div class="stat-card returned">
+          <div class="stat-label">退回修正</div>
+          <div class="stat-number" id="statReturned">0</div>
+          <div class="stat-sub">待承辦單位修正</div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            審查進度分布
+          </div>
+          <div class="donut-wrap">
+            <canvas id="donutChart" width="140" height="140" role="img" aria-label="審查進度圓餅圖"></canvas>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+            各單位審查效率（平均天數）
+          </div>
+          <canvas id="barChart" width="300" height="140" role="img" aria-label="各單位平均審查天數長條圖"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">最新送審文件</div>
+          <button class="btn btn-outline" onclick="showPage('doclist')">查看全部</button>
+        </div>
+        <table id="recentDocsTable">
+          <thead>
+            <tr>
+              <th>文件編號</th>
+              <th>文件名稱</th>
+              <th>類別</th>
+              <th>提送日期</th>
+              <th>目前送審單位</th>
+              <th>狀態</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="recentDocsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUBMIT PAGE -->
+    <div id="page-submit" class="page">
+      <div class="breadcrumb">功能 / <span onclick="showPage('submit')">提送文件</span></div>
+      <div class="form-card">
+        <div class="form-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+          文件基本資料
+        </div>
+        <div class="form-grid">
+          <div>
+            <label class="field-label">文件編號 <span class="req">*</span></label>
+            <input class="field-input" id="docNo" placeholder="自動產生，可修改" value="">
+          </div>
+          <div>
+            <label class="field-label">文件類別 <span class="req">*</span></label>
+            <select class="field-select" id="docCategory">
+              <option value="">— 請選擇 —</option>
+              <option>施工計畫書</option>
+              <option>施工圖說</option>
+              <option>材料送審</option>
+              <option>品質計畫書</option>
+              <option>施工日報</option>
+              <option>工程變更</option>
+              <option>竣工文件</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <div class="form-full">
+            <label class="field-label">文件名稱 <span class="req">*</span></label>
+            <input class="field-input" id="docName" placeholder="請輸入文件完整名稱">
+          </div>
+          <div>
+            <label class="field-label">工程項目</label>
+            <input class="field-input" id="docProject" placeholder="相關工程項目名稱">
+          </div>
+          <div>
+            <label class="field-label">版次</label>
+            <select class="field-select" id="docVersion">
+              <option>Rev. 0（初版）</option>
+              <option>Rev. 1</option>
+              <option>Rev. 2</option>
+              <option>Rev. 3</option>
+              <option>Rev. 4</option>
+            </select>
+          </div>
+          <div class="form-full">
+            <label class="field-label">文件說明</label>
+            <textarea class="field-textarea" id="docDesc" placeholder="請描述本次送審文件內容摘要..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          上傳文件檔案
+        </div>
+        <div class="file-upload-area" id="uploadArea">
+          <input type="file" multiple accept=".pdf,.doc,.docx,.dwg,.xlsx,.xls,.jpg,.png" onchange="handleFileUpload(this)">
+          <div class="file-upload-icon">📄</div>
+          <div class="file-upload-text">拖曳檔案至此，或點擊選擇檔案</div>
+          <div class="file-upload-hint">支援格式：PDF、Word、AutoCAD、Excel、圖片（最大 50MB）</div>
+        </div>
+        <div class="uploaded-files" id="uploadedFilesList"></div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          送審路徑設定
+        </div>
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          文件將依序送至：監造單位 → 業主工務所 → 業主總公司，三關均通過後完成核定。
+        </div>
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-node done" style="font-size:10px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 7l-11 11-5-5"/></svg>
+              承辦單位
+            </div>
+            <div class="flow-label">承攬廠商<br>（提送）</div>
+          </div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step">
+            <div class="flow-node active">
+              <span style="font-size:18px;">🔍</span>
+              <span>第1關</span>
+            </div>
+            <div class="flow-label">監造單位</div>
+          </div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step">
+            <div class="flow-node pending">
+              <span style="font-size:18px;">📋</span>
+              <span>第2關</span>
+            </div>
+            <div class="flow-label">業主工務所</div>
+          </div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step">
+            <div class="flow-node pending">
+              <span style="font-size:18px;">🏛️</span>
+              <span>第3關</span>
+            </div>
+            <div class="flow-label">業主總公司</div>
+          </div>
+          <div class="flow-arrow"></div>
+          <div class="flow-step">
+            <div class="flow-node pending">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/></svg>
+              <span>核定</span>
+            </div>
+            <div class="flow-label">完成核定</div>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:20px; gap:10px;">
+          <button class="btn btn-outline" onclick="showPage('doclist')">取消</button>
+          <button class="btn btn-primary" onclick="submitDoc()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+            確認提送
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOC LIST PAGE -->
+    <div id="page-doclist" class="page">
+      <div class="filter-bar">
+        <input id="filterSearch" placeholder="🔍 搜尋文件編號、名稱..." oninput="renderDocList()">
+        <select id="filterStatus" onchange="renderDocList()">
+          <option value="">所有狀態</option>
+          <option value="reviewing">審核中</option>
+          <option value="returned">退回修正</option>
+          <option value="approved">已核定</option>
+        </select>
+        <select id="filterCategory" onchange="renderDocList()">
+          <option value="">所有類別</option>
+          <option>施工計畫書</option>
+          <option>施工圖說</option>
+          <option>材料送審</option>
+          <option>品質計畫書</option>
+          <option>施工日報</option>
+          <option>工程變更</option>
+          <option>竣工文件</option>
+        </select>
+        <button class="btn btn-primary" id="btnAddDoc" style="display:none;" onclick="showPage('submit')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          新增提送
+        </button>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" id="th-id" onclick="sortDocList('id')">文件編號<span class="sort-icon"><svg viewBox="0 0 10 6" fill="currentColor"><path d="M5 0l5 6H0z"/></svg><svg viewBox="0 0 10 6" fill="currentColor"><path d="M5 6L0 0h10z"/></svg></span></th>
+              <th>文件名稱</th>
+              <th>類別</th>
+              <th>版次</th>
+              <th class="sortable" id="th-submittedAt" onclick="sortDocList('submittedAt')">提送日期<span class="sort-icon"><svg viewBox="0 0 10 6" fill="currentColor"><path d="M5 0l5 6H0z"/></svg><svg viewBox="0 0 10 6" fill="currentColor"><path d="M5 6L0 0h10z"/></svg></span></th>
+              <th>目前審查</th>
+              <th>狀態</th>
+              <th class="sortable" id="th-finalApprovedAt" onclick="sortDocList('finalApprovedAt')">核定日期<span class="sort-icon"><svg viewBox="0 0 10 6" fill="currentColor"><path d="M5 0l5 6H0z"/></svg><svg viewBox="0 0 10 6" fill="currentColor"><path d="M5 6L0 0h10z"/></svg></span></th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="docListBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REVIEW PAGE -->
+    <div id="page-review" class="page">
+      <div class="alert alert-warning" id="reviewRoleAlert" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        承辦單位無審查功能，請至「文件清單」查看提送文件狀態。
+      </div>
+      <div id="reviewContent">
+        <div class="card" style="padding:0; overflow:hidden;">
+          <div style="padding:18px 24px; border-bottom:1px solid var(--c-gray-200); display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:15px; font-weight:600; color:var(--c-navy);">待我審查文件</div>
+            <div style="font-size:13px; color:var(--c-gray-500);" id="reviewCountText"></div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>文件編號</th>
+                <th>文件名稱</th>
+                <th>類別</th>
+                <th>送達時間</th>
+                <th>提送單位</th>
+                <th>等待天數</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="reviewListBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG PAGE -->
+    <div id="page-log" class="page">
+      <div class="card">
+        <div class="card-title">文件傳遞完整記錄</div>
+        <div class="filter-bar" style="margin-bottom:16px;">
+          <input id="logSearch" placeholder="🔍 搜尋文件編號..." oninput="renderLog()" style="height:38px; border:1.5px solid var(--c-gray-300); border-radius:6px; padding:0 12px; font-size:13px; flex:1; min-width:180px; outline:none;">
+        </div>
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>時間戳記</th>
+              <th>文件編號</th>
+              <th>文件名稱</th>
+              <th>動作</th>
+              <th>操作單位</th>
+              <th>操作人員</th>
+              <th>備註</th>
+            </tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STATS PAGE -->
+    <div id="page-stats" class="page">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card" style="border-left:4px solid var(--c-navy);">
+          <div class="stat-label">本月提送件數</div>
+          <div class="stat-number" id="statsMonthly" style="color:var(--c-navy);">0</div>
+          <div class="stat-sub">本月新增送審</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid var(--c-gold);">
+          <div class="stat-label">平均審查天數</div>
+          <div class="stat-number" id="statsAvgDays" style="color:var(--c-gold);">—</div>
+          <div class="stat-sub">從提送到核定</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid var(--c-green);">
+          <div class="stat-label">一次通過率</div>
+          <div class="stat-number" id="statsPassRate" style="color:var(--c-green);">—</div>
+          <div class="stat-sub">未曾退回即核定</div>
+        </div>
+      </div>
+      <div class="chart-row">
+        <div class="card">
+          <div class="card-title">文件類別分布</div>
+          <canvas id="catChart" width="300" height="200" role="img" aria-label="文件類別分布圖"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">各單位審查天數統計</div>
+          <table>
+            <thead><tr><th>審查單位</th><th>收到件數</th><th>已完成</th><th>平均天數</th><th>進行中</th></tr></thead>
+            <tbody id="unitStatsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DOCUMENT DETAIL MODAL ==================== -->
+<div class="modal-overlay" id="docModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalDocTitle">文件詳情</div>
+        <div class="modal-subtitle" id="modalDocNo">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('docModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalContent"></div>
+    </div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- ==================== REVIEW ACTION MODAL ==================== -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">執行審查</div>
+        <div class="modal-subtitle" id="reviewModalDocNo">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('reviewModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="reviewModalContent"></div>
+      <div class="review-actions">
+        <button class="review-action-btn approve" onclick="submitReview('approve')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          審查通過
+        </button>
+        <button class="review-action-btn return" onclick="showReturnForm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 1 0 .49-3.85"/></svg>
+          退回修正
+        </button>
+      </div>
+      <div id="returnForm" style="display:none; margin-top:16px;">
+        <label class="field-label">退回意見 <span class="req">*</span></label>
+        <textarea class="field-textarea" id="returnComment" placeholder="請詳述退回原因及修正要求..."></textarea>
+        <div style="margin-top:12px;">
+          <label class="field-label">附上審查意見檔案（選填）</label>
+          <div class="file-upload-area" style="padding:16px;">
+            <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.png" onchange="handleReturnFileUpload(this)">
+            <div style="font-size:13px; color:var(--c-gray-500);">點擊或拖曳上傳審查意見附件</div>
+          </div>
+          <div class="uploaded-files" id="returnFilesList"></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:12px; gap:10px;">
+          <button class="btn btn-outline" onclick="document.getElementById('returnForm').style.display='none'">取消</button>
+          <button class="btn btn-danger" onclick="submitReview('return')">確認退回</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DELETE CONFIRM MODAL ==================== -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" style="color:var(--c-red);">
+          <span style="margin-right:8px;">🗑️</span>刪除送審文件
+        </div>
+        <div class="modal-subtitle">此操作需要輸入密碼確認，刪除後無法復原</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Doc info -->
+      <div style="background:var(--c-red-light); border:1.5px solid #f5c6c2; border-radius:var(--radius-md); padding:16px 18px; margin-bottom:20px;">
+        <div style="font-size:12px; color:var(--c-red); font-weight:600; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px;">即將刪除</div>
+        <div style="font-size:14px; font-weight:700; color:var(--c-gray-900);" id="deleteDocName">—</div>
+        <div style="font-size:12px; color:var(--c-gray-500); margin-top:4px;" id="deleteDocMeta">—</div>
+        <div style="margin-top:10px;" id="deleteDocStatus"></div>
+      </div>
+      <!-- Delete reason -->
+      <div style="margin-bottom:16px;">
+        <label class="field-label">刪除原因 <span class="req">*</span></label>
+        <select class="field-select" id="deleteReason">
+          <option value="">— 請選擇刪除原因 —</option>
+          <option value="重複提送">重複提送</option>
+          <option value="文件錯誤">文件錯誤</option>
+          <option value="工程取消">工程取消</option>
+          <option value="版本作廢">版本作廢，由新版本取代</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div id="deleteReasonOtherWrap" style="display:none; margin-bottom:16px;">
+        <label class="field-label">說明</label>
+        <input class="field-input" id="deleteReasonOther" placeholder="請說明刪除原因...">
+      </div>
+      <!-- Password confirm -->
+      <div style="margin-bottom:8px;">
+        <label class="field-label">輸入您的密碼以確認刪除 <span class="req">*</span></label>
+        <input class="field-input" type="password" id="deletePassword" placeholder="輸入登入密碼" autocomplete="current-password">
+      </div>
+      <div id="deleteError" style="display:none; background:var(--c-red-light); color:var(--c-red); border-radius:var(--radius-sm); padding:10px 14px; font-size:13px; margin-top:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('deleteModal')">取消</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+        確認刪除
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FILE VIEWER MODAL ==================== -->
+<div class="modal-overlay" id="fileViewerModal">
+  <div class="modal" style="width:860px;">
+    <div class="file-viewer-header">
+      <div class="file-viewer-icon" id="fvIcon">📄</div>
+      <div class="file-viewer-title" id="fvTitle">檔案預覽</div>
+      <button class="modal-close" onclick="closeModal('fileViewerModal')">✕</button>
+    </div>
+    <div class="file-viewer-body" id="fvBody"></div>
+    <div class="file-viewer-footer">
+      <div class="file-meta" id="fvMeta"></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline" onclick="closeModal('fileViewerModal')">關閉</button>
+        <button class="btn btn-primary" id="fvDownload" onclick="downloadCurrentFile()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          下載
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SUCCESS TOAST ==================== -->
+<div id="toast" style="position:fixed; bottom:28px; right:28px; background:var(--c-navy); color:#fff; padding:14px 24px; border-radius:10px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); z-index:200; display:none; align-items:center; gap:10px;">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5dd696" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ====================================================
+// DATA & STATE
+// ====================================================
+const USERS = {};
+const UNITS = ['contractor','supervisor','owner-site','owner-hq'];
+const UNIT_NAMES = {
+  'contractor': '承辦單位（承攬廠商）',
+  'supervisor': '監造單位',
+  'owner-site': '業主工務所',
+  'owner-hq': '業主總公司'
+};
+const UNIT_SHORT = {
+  'contractor': '承攬廠商',
+  'supervisor': '監造單位',
+  'owner-site': '業主工務所',
+  'owner-hq': '業主總公司'
+};
+const REVIEW_ORDER = ['supervisor','owner-site','owner-hq'];
+
+// Generate users
+['contractor','supervisor','owner-site','owner-hq'].forEach(unit => {
+  const prefix = unit.replace('-','');
+  for(let i=1; i<=10; i++) {
+    const id = prefix.replace('owner','owner') + (i<10?'0':'')+i;
+    USERS[id] = { unit, pass:'1234', name: UNIT_SHORT[unit] + ' ' + (i<10?'0':'')+i + ' 號' };
+  }
+});
+
+let currentUser = null;
+let reviewingDocId = null;
+let uploadedFiles = [];
+let returnFiles = [];
+let donutChartInst = null;
+let barChartInst = null;
+let catChartInst = null;
+let docListSort = { key: null, dir: 'asc' };
+
+// Sample documents
+let documents = [
+  { id:'DOC-2025-001', name:'主體結構施工計畫書', category:'施工計畫書', version:'Rev. 0（初版）', project:'主體工程', desc:'說明主體結構施工方法與安全措施', submittedBy:'contractor01', submittedAt:'2025/01/08 09:30', currentStep:'owner-site', status:'reviewing', finalApprovedAt:null, files:['施工計畫書_Rev0.pdf'], history:[
+    {time:'2025/01/08 09:30', unit:'contractor', user:'contractor01', action:'提送文件', note:''},
+    {time:'2025/01/10 14:15', unit:'supervisor', user:'supervisor03', action:'審查通過', note:''},
+    {time:'2025/01/11 09:00', unit:'owner-site', user:'', action:'文件送達', note:''}
+  ]},
+  { id:'DOC-2025-002', name:'鋼筋混凝土施工圖說', category:'施工圖說', version:'Rev. 1', project:'主體工程', desc:'詳細施工圖紙更新', submittedBy:'contractor02', submittedAt:'2025/01/05 10:00', currentStep:'approved', status:'approved', finalApprovedAt:'2025/01/20 16:00', files:['圖說_RC_Rev1.pdf','圖說_RC_詳圖.pdf'], history:[
+    {time:'2025/01/05 10:00', unit:'contractor', user:'contractor02', action:'提送文件', note:''},
+    {time:'2025/01/07 15:30', unit:'supervisor', user:'supervisor01', action:'審查通過', note:''},
+    {time:'2025/01/09 09:15', unit:'owner-site', user:'ownersite02', action:'審查通過', note:''},
+    {time:'2025/01/20 16:00', unit:'owner-hq', user:'ownerhq01', action:'審查通過（最終核定）', note:''}
+  ]},
+  { id:'DOC-2025-003', name:'防水材料送審', category:'材料送審', version:'Rev. 0（初版）', project:'防水工程', desc:'防水膜材料規格與試驗報告', submittedBy:'contractor01', submittedAt:'2025/01/12 11:00', currentStep:'contractor', status:'returned', finalApprovedAt:null, files:['防水材料_datasheet.pdf','試驗報告.pdf'], history:[
+    {time:'2025/01/12 11:00', unit:'contractor', user:'contractor01', action:'提送文件', note:''},
+    {time:'2025/01/14 10:30', unit:'supervisor', user:'supervisor02', action:'退回修正', note:'材料規格不符CNS標準，請補充試驗數據'}
+  ]},
+  { id:'DOC-2025-004', name:'品質計畫書（初版）', category:'品質計畫書', version:'Rev. 0（初版）', project:'全案', desc:'整體工程品質管理計畫', submittedBy:'contractor03', submittedAt:'2025/01/15 08:30', currentStep:'supervisor', status:'reviewing', finalApprovedAt:null, files:['品質計畫書.pdf'], history:[
+    {time:'2025/01/15 08:30', unit:'contractor', user:'contractor03', action:'提送文件', note:''},
+    {time:'2025/01/15 09:00', unit:'supervisor', user:'', action:'文件送達', note:''}
+  ]},
+  { id:'DOC-2025-005', name:'基礎開挖施工計畫', category:'施工計畫書', version:'Rev. 0（初版）', project:'基礎工程', desc:'基礎開挖方法、安全支撐計畫', submittedBy:'contractor04', submittedAt:'2024/12/20 14:00', currentStep:'approved', status:'approved', finalApprovedAt:'2025/01/03 10:00', files:['開挖計畫.pdf'], history:[
+    {time:'2024/12/20 14:00', unit:'contractor', user:'contractor04', action:'提送文件', note:''},
+    {time:'2024/12/23 11:00', unit:'supervisor', user:'supervisor01', action:'審查通過', note:''},
+    {time:'2024/12/26 09:30', unit:'owner-site', user:'ownersite01', action:'審查通過', note:''},
+    {time:'2025/01/03 10:00', unit:'owner-hq', user:'ownerhq02', action:'審查通過（最終核定）', note:''}
+  ]},
+  { id:'DOC-2025-006', name:'工程變更通知單 No.1', category:'工程變更', version:'Rev. 0（初版）', project:'主體工程', desc:'承重牆配置調整說明', submittedBy:'contractor05', submittedAt:'2025/01/18 13:00', currentStep:'owner-hq', status:'reviewing', finalApprovedAt:null, files:['變更通知單.pdf','變更說明.docx'], history:[
+    {time:'2025/01/18 13:00', unit:'contractor', user:'contractor05', action:'提送文件', note:''},
+    {time:'2025/01/20 09:15', unit:'supervisor', user:'supervisor04', action:'審查通過', note:''},
+    {time:'2025/01/22 14:00', unit:'owner-site', user:'ownersite03', action:'審查通過', note:''},
+    {time:'2025/01/23 08:00', unit:'owner-hq', user:'', action:'文件送達', note:''}
+  ]},
+];
+
+let actionLog = [];
+documents.forEach(d => d.history.forEach(h => {
+  actionLog.push({...h, docId:d.id, docName:d.name});
+}));
+
+// ====================================================
+// AUTH
+// ====================================================
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+
+  if(!user || !pass){ err.style.display='block'; err.textContent='請填寫帳號與密碼'; return; }
+  const u = USERS[user];
+  if(!u || u.pass !== pass){ err.style.display='block'; err.textContent='帳號或密碼不正確，請重新輸入。'; return; }
+
+  currentUser = { id: user, pass: u.pass, ...u };
+  err.style.display = 'none';
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  initApp();
+}
+
+document.getElementById('loginUser').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  currentUser = null;
+  uploadedFiles = [];
+  returnFiles = [];
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  if(donutChartInst){ donutChartInst.destroy(); donutChartInst=null; }
+  if(barChartInst){ barChartInst.destroy(); barChartInst=null; }
+  if(catChartInst){ catChartInst.destroy(); catChartInst=null; }
+}
+
+// ====================================================
+// APP INIT
+// ====================================================
+function initApp() {
+  const u = currentUser;
+  document.getElementById('sidebarUserName').textContent = u.name;
+  document.getElementById('sidebarUserUnit').textContent = UNIT_NAMES[u.unit];
+
+  const badges = { contractor:'badge-contractor', supervisor:'badge-supervisor', 'owner-site':'badge-owner-site', 'owner-hq':'badge-owner-hq' };
+  const labels = { contractor:'承辦單位', supervisor:'監造審查', 'owner-site':'工務所審查', 'owner-hq':'總公司審查' };
+  const badge = document.getElementById('sidebarRoleBadge');
+  badge.className = 'user-role-badge ' + badges[u.unit];
+  badge.textContent = labels[u.unit];
+
+  document.getElementById('navSubmit').style.display = u.unit === 'contractor' ? 'flex' : 'none';
+  document.getElementById('btnAddDoc').style.display = u.unit === 'contractor' ? 'flex' : 'none';
+
+  // Auto doc no
+  document.getElementById('docNo').value = 'DOC-' + new Date().getFullYear() + '-' + String(documents.length+1).padStart(3,'0');
+
+  updateClock();
+  setInterval(updateClock, 1000);
+  showPage('dashboard');
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('topbarTime').textContent = now.toLocaleString('zh-TW', { year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit' });
+}
+
+// ====================================================
+// NAVIGATION
+// ====================================================
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+
+  const titles = { dashboard:'儀表板', submit:'提送文件', doclist:'文件清單', review:'待審文件', log:'傳遞記錄', stats:'統計報表' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+
+  // Active nav
+  const navMap = { dashboard:0, submit:1, doclist:2, review:3, log:4, stats:5 };
+  const navItems = document.querySelectorAll('.nav-item');
+  if(navMap[page] !== undefined) navItems[navMap[page]].classList.add('active');
+
+  if(page==='dashboard') renderDashboard();
+  if(page==='doclist') renderDocList();
+  if(page==='review') renderReviewList();
+  if(page==='log') renderLog();
+  if(page==='stats') renderStats();
+}
+
+// ====================================================
+// DASHBOARD
+// ====================================================
+function renderDashboard() {
+  const total = documents.length;
+  const approved = documents.filter(d=>d.status==='approved').length;
+  const reviewing = documents.filter(d=>d.status==='reviewing').length;
+  const returned = documents.filter(d=>d.status==='returned').length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statApproved').textContent = approved;
+  document.getElementById('statReviewing').textContent = reviewing;
+  document.getElementById('statReturned').textContent = returned;
+
+  // Pending badge
+  const myPending = getMyPendingDocs();
+  const badge = document.getElementById('reviewBadge');
+  badge.textContent = myPending.length;
+  badge.style.display = myPending.length > 0 ? 'inline-block' : 'none';
+
+  // Donut chart
+  const ctx1 = document.getElementById('donutChart').getContext('2d');
+  if(donutChartInst) donutChartInst.destroy();
+  donutChartInst = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: ['已核定','審核中','退回修正'],
+      datasets: [{ data: [approved, reviewing, returned], backgroundColor: ['#1a7a4a','#c9922a','#c0392b'], borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive: false, plugins: { legend: { display: false } }, cutout: '68%' }
+  });
+  const legend = document.getElementById('donutLegend');
+  legend.innerHTML = [
+    { label:'已核定', val:approved, color:'#1a7a4a' },
+    { label:'審核中', val:reviewing, color:'#c9922a' },
+    { label:'退回修正', val:returned, color:'#c0392b' }
+  ].map(i=>`<div class="donut-legend-item">
+    <div class="legend-dot" style="background:${i.color}"></div>
+    <div class="legend-label">${i.label}</div>
+    <div class="legend-value">${i.val}</div>
+    <div class="legend-pct">${total?Math.round(i.val/total*100):0}%</div>
+  </div>`).join('');
+
+  // Bar chart (avg days)
+  const ctx2 = document.getElementById('barChart').getContext('2d');
+  if(barChartInst) barChartInst.destroy();
+  barChartInst = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['監造單位','業主工務所','業主總公司'],
+      datasets: [{ label: '平均天數', data: [2.3, 3.1, 4.2], backgroundColor: ['#2563a8','#1a7a4a','#8a3fa0'], borderRadius: 4 }]
+    },
+    options: { responsive: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  // Recent docs
+  const body = document.getElementById('recentDocsBody');
+  body.innerHTML = documents.slice(-5).reverse().map(d => `
+    <tr>
+      <td><span class="doc-number">${d.id}</span></td>
+      <td><span class="doc-link" onclick="showDocDetail('${d.id}')">${d.name}</span></td>
+      <td>${d.category}</td>
+      <td>${d.submittedAt.split(' ')[0]}</td>
+      <td>${d.currentStep==='approved'?'—':UNIT_SHORT[d.currentStep]||d.currentStep}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td><button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="showDocDetail('${d.id}')">詳情</button></td>
+    </tr>`).join('');
+}
+
+// ====================================================
+// SORT
+// ====================================================
+function sortDocList(key) {
+  if(docListSort.key === key) {
+    docListSort.dir = docListSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    docListSort.key = key;
+    docListSort.dir = 'asc';
+  }
+  // Update header classes
+  ['id','submittedAt','finalApprovedAt'].forEach(k => {
+    const th = document.getElementById('th-'+k);
+    if(!th) return;
+    th.classList.remove('asc','desc');
+    if(k === key) th.classList.add(docListSort.dir);
+  });
+  renderDocList();
+}
+
+// ====================================================
+// DOC LIST
+// ====================================================
+function renderDocList() {
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+  const cat = document.getElementById('filterCategory').value;
+  const u = currentUser;
+
+  let docs = documents;
+  if(u.unit === 'contractor') docs = docs.filter(d => d.submittedBy.startsWith('contractor'));
+  if(search) docs = docs.filter(d => d.id.toLowerCase().includes(search)||d.name.toLowerCase().includes(search));
+  if(status) docs = docs.filter(d => d.status===status);
+  if(cat) docs = docs.filter(d => d.category===cat);
+
+  // Sort
+  if(docListSort.key) {
+    const k = docListSort.key;
+    const dir = docListSort.dir === 'asc' ? 1 : -1;
+    docs = [...docs].sort((a, b) => {
+      let va = a[k] || '';
+      let vb = b[k] || '';
+      // For dates stored as strings like '2025/01/08 09:30', lexicographic works fine
+      // For id like 'DOC-2025-001', also lexicographic
+      if(va < vb) return -1 * dir;
+      if(va > vb) return 1 * dir;
+      return 0;
+    });
+  }
+
+  const body = document.getElementById('docListBody');
+  if(!docs.length){
+    body.innerHTML = '<tr><td colspan="9"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>目前沒有符合條件的文件</p></div></td></tr>';
+    return;
+  }
+  body.innerHTML = docs.map(d => `
+    <tr>
+      <td><span class="doc-number">${d.id}</span></td>
+      <td><span class="doc-link" onclick="showDocDetail('${d.id}')">${d.name}</span></td>
+      <td>${d.category}</td>
+      <td style="font-size:12px;">${d.version}</td>
+      <td style="font-size:12px;">${d.submittedAt.split(' ')[0]}</td>
+      <td>${d.currentStep==='approved'?'—':UNIT_SHORT[d.currentStep]||d.currentStep}</td>
+      <td>${statusBadge(d.status)}</td>
+      <td style="font-size:12px;">${d.finalApprovedAt||'—'}</td>
+      <td>
+        <button class="btn btn-outline" style="font-size:12px;padding:5px 10px;" onclick="showDocDetail('${d.id}')">詳情</button>
+        ${d.status==='returned' && u.unit==='contractor' ? `<button class="btn btn-gold" style="font-size:12px;padding:5px 10px;margin-left:4px;" onclick="showPage('submit')">重新提送</button>` : ''}
+        ${u.unit==='owner-site' ? `<button class="btn-delete-sm" onclick="openDeleteModal('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/></svg>刪除</button>` : ''}
+      </td>
+    </tr>`).join('');
+}
+
+// ====================================================
+// REVIEW LIST
+// ====================================================
+function getMyPendingDocs() {
+  if(!currentUser || currentUser.unit==='contractor') return [];
+  return documents.filter(d => d.status==='reviewing' && d.currentStep===currentUser.unit);
+}
+
+function renderReviewList() {
+  const u = currentUser;
+  const alert = document.getElementById('reviewRoleAlert');
+  const content = document.getElementById('reviewContent');
+  if(u.unit==='contractor'){
+    alert.style.display='flex'; content.style.display='none'; return;
+  }
+  alert.style.display='none'; content.style.display='block';
+
+  const pending = getMyPendingDocs();
+  document.getElementById('reviewCountText').textContent = `共 ${pending.length} 件待審`;
+  document.getElementById('reviewBadge').textContent = pending.length;
+  document.getElementById('reviewBadge').style.display = pending.length>0?'inline-block':'none';
+
+  const body = document.getElementById('reviewListBody');
+  if(!pending.length){
+    body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><p>目前沒有待審文件，請繼續保持！</p></div></td></tr>';
+    return;
+  }
+
+  const now = new Date();
+  body.innerHTML = pending.map(d => {
+    const arrivedLog = d.history.filter(h=>h.unit===u.unit);
+    const arrivedTime = arrivedLog.length ? arrivedLog[arrivedLog.length-1].time : d.submittedAt;
+    const days = Math.floor((now - new Date(arrivedTime.replace(/\//g,'-'))) / 86400000);
+    return `<tr>
+      <td><span class="doc-number">${d.id}</span></td>
+      <td><span class="doc-link" onclick="showDocDetail('${d.id}')">${d.name}</span></td>
+      <td>${d.category}</td>
+      <td style="font-size:12px;">${arrivedTime}</td>
+      <td><span class="unit-tag unit-contractor">承攬廠商</span></td>
+      <td><span style="color:${days>3?'var(--c-red)':'var(--c-gray-700)'}; font-weight:${days>3?'600':'400'}">${days} 天</span></td>
+      <td><button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="openReviewModal('${d.id}')">執行審查</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ====================================================
+// DOCUMENT DETAIL MODAL
+// ====================================================
+function showDocDetail(docId) {
+  const d = documents.find(x=>x.id===docId);
+  if(!d) return;
+  document.getElementById('modalDocTitle').textContent = d.name;
+  document.getElementById('modalDocNo').textContent = d.id + '　｜　' + d.category + '　｜　' + d.version;
+
+  const stepIdx = { contractor:0, supervisor:0, 'owner-site':1, 'owner-hq':2, approved:3 };
+
+  let timelineHTML = d.history.map((h,i) => `
+    <div class="timeline-item">
+      <div class="timeline-dot ${i<d.history.length-1?'done':'active'}"></div>
+      <div class="timeline-content">
+        <div class="timeline-unit">${UNIT_SHORT[h.unit]||h.unit} — ${h.action}</div>
+        <div class="timeline-time">${h.time}　${h.user?'　操作人：'+h.user:''}</div>
+        ${h.note?`<div class="timeline-note">📌 審查意見：${h.note}${(h.reviewFiles&&h.reviewFiles.length)?'<div style="margin-top:8px;">'+h.reviewFiles.map(f=>renderFileItem(f,null)).join('')+'</div>':''}</div>`:''}
+      </div>
+    </div>`).join('');
+
+  // Add future steps as pending
+  if(d.status === 'reviewing') {
+    const curIdx = REVIEW_ORDER.indexOf(d.currentStep);
+    for(let i=curIdx+1; i<REVIEW_ORDER.length; i++){
+      timelineHTML += `<div class="timeline-item">
+        <div class="timeline-dot pending"></div>
+        <div class="timeline-content">
+          <div class="timeline-unit" style="color:var(--c-gray-500);">${UNIT_SHORT[REVIEW_ORDER[i]]} — 待審查</div>
+        </div>
+      </div>`;
+    }
+    timelineHTML += `<div class="timeline-item">
+      <div class="timeline-dot pending"></div>
+      <div class="timeline-content">
+        <div class="timeline-unit" style="color:var(--c-gray-500);">最終核定</div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('modalContent').innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
+      <div style="background:var(--c-gray-100); border-radius:8px; padding:12px 16px;">
+        <div style="font-size:11px; font-weight:600; color:var(--c-gray-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:5px;">提送日期</div>
+        <div style="font-size:14px; font-weight:500;">${d.submittedAt}</div>
+      </div>
+      <div style="background:var(--c-gray-100); border-radius:8px; padding:12px 16px;">
+        <div style="font-size:11px; font-weight:600; color:var(--c-gray-500); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:5px;">目前狀態</div>
+        <div>${statusBadge(d.status)}</div>
+      </div>
+      ${d.finalApprovedAt?`<div style="background:var(--c-green-light); border-radius:8px; padding:12px 16px; grid-column:1/-1;">
+        <div style="font-size:11px; font-weight:600; color:var(--c-green); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:5px;">✅ 最終核定時間</div>
+        <div style="font-size:14px; font-weight:500; color:var(--c-green);">${d.finalApprovedAt}</div>
+      </div>`:''}
+    </div>
+    ${d.desc?`<div style="margin-bottom:20px; padding:14px; background:var(--c-blue-light); border-radius:8px; font-size:13.5px; color:var(--c-navy);">📄 ${d.desc}</div>`:''}
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px; font-weight:600; color:var(--c-gray-500); text-transform:uppercase; margin-bottom:10px;">附件檔案</div>
+      ${(d.files||[]).length ? (d.files).map(f=>renderFileItem(f, d.id)).join('') : '<div style="font-size:13px;color:var(--c-gray-500);">無附件</div>'}
+    </div>
+    <div>
+      <div style="font-size:12px; font-weight:600; color:var(--c-gray-500); text-transform:uppercase; margin-bottom:14px;">審查流程記錄</div>
+      <div class="timeline">${timelineHTML}</div>
+    </div>`;
+
+  const footer = document.getElementById('modalFooter');
+  const u = currentUser;
+  const canReview = d.status==='reviewing' && d.currentStep===u.unit && u.unit!=='contractor';
+  footer.innerHTML = canReview
+    ? `<button class="btn btn-outline" onclick="closeModal('docModal')">關閉</button><button class="btn btn-primary" onclick="closeModal('docModal'); openReviewModal('${docId}')">執行審查</button>`
+    : `<button class="btn btn-primary" onclick="closeModal('docModal')">關閉</button>`;
+
+  document.getElementById('docModal').classList.add('open');
+}
+
+// ====================================================
+// REVIEW MODAL
+// ====================================================
+function openReviewModal(docId) {
+  const d = documents.find(x=>x.id===docId);
+  if(!d) return;
+  reviewingDocId = docId;
+  returnFiles = [];
+  document.getElementById('reviewModalDocNo').textContent = d.id + ' — ' + d.name;
+  document.getElementById('returnForm').style.display = 'none';
+  document.getElementById('returnComment').value = '';
+  document.getElementById('returnFilesList').innerHTML = '';
+
+  document.getElementById('reviewModalContent').innerHTML = `
+    <div style="background:var(--c-gray-100); border-radius:8px; padding:14px 18px; margin-bottom:16px;">
+      <div style="font-size:12px; color:var(--c-gray-500); margin-bottom:6px;">文件資訊</div>
+      <div style="font-size:14px; font-weight:500; color:var(--c-navy);">${d.name}</div>
+      <div style="font-size:12px; color:var(--c-gray-700); margin-top:4px;">${d.category} ｜ ${d.version}</div>
+      ${d.desc?`<div style="font-size:12.5px; color:var(--c-gray-700); margin-top:6px;">說明：${d.desc}</div>`:''}
+      <div style="margin-top:10px;">${(d.files||[]).map(f=>renderFileItem(f, d.id)).join('')}</div>
+    </div>
+    <div style="font-size:13px; font-weight:600; color:var(--c-navy); margin-bottom:8px;">請選擇審查結果：</div>`;
+
+  document.getElementById('reviewModal').classList.add('open');
+}
+
+function showReturnForm() {
+  document.getElementById('returnForm').style.display = 'block';
+}
+
+function submitReview(action) {
+  const d = documents.find(x=>x.id===reviewingDocId);
+  if(!d) return;
+  const u = currentUser;
+  const now = new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'/');
+
+  if(action==='return') {
+    const comment = document.getElementById('returnComment').value.trim();
+    if(!comment){ alert('請填寫退回意見'); return; }
+    const returnFileNames = returnFiles.map(f=>f.name);
+    if(returnFiles.length) storeFiles(d.id + '_review_' + Date.now(), returnFiles);
+    d.history.push({ time:now, unit:u.unit, user:u.id, action:'退回修正', note:comment, reviewFiles: returnFileNames });
+    d.status = 'returned';
+    d.currentStep = 'contractor';
+    actionLog.push({ time:now, unit:u.unit, user:u.id, action:'退回修正', note:comment, docId:d.id, docName:d.name });
+    showToast('已退回文件，審查意見已記錄。');
+  } else {
+    const curIdx = REVIEW_ORDER.indexOf(d.currentStep);
+    d.history.push({ time:now, unit:u.unit, user:u.id, action: curIdx===REVIEW_ORDER.length-1 ? '審查通過（最終核定）' : '審查通過', note:'' });
+    actionLog.push({ time:now, unit:u.unit, user:u.id, action:'審查通過', note:'', docId:d.id, docName:d.name });
+
+    if(curIdx === REVIEW_ORDER.length-1) {
+      d.status = 'approved';
+      d.currentStep = 'approved';
+      d.finalApprovedAt = now;
+      showToast('文件已最終核定！');
+    } else {
+      const nextUnit = REVIEW_ORDER[curIdx+1];
+      d.currentStep = nextUnit;
+      d.history.push({ time:now, unit:nextUnit, user:'', action:'文件送達', note:'' });
+      actionLog.push({ time:now, unit:nextUnit, user:'', action:'文件送達', note:'', docId:d.id, docName:d.name });
+      showToast('審查通過，文件已送至' + UNIT_SHORT[nextUnit]);
+    }
+  }
+
+  closeModal('reviewModal');
+  renderReviewList();
+  renderDashboard();
+}
+
+// ====================================================
+// SUBMIT DOC
+// ====================================================
+function submitDoc() {
+  const no = document.getElementById('docNo').value.trim();
+  const cat = document.getElementById('docCategory').value;
+  const name = document.getElementById('docName').value.trim();
+
+  if(!no||!cat||!name){ showToast('請填寫必填欄位（文件編號、類別、名稱）','warn'); return; }
+
+  const now = new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'/');
+  const u = currentUser;
+
+  const doc = {
+    id: no,
+    name,
+    category: cat,
+    version: document.getElementById('docVersion').value,
+    project: document.getElementById('docProject').value,
+    desc: document.getElementById('docDesc').value,
+    submittedBy: u.id,
+    submittedAt: now,
+    currentStep: 'supervisor',
+    status: 'reviewing',
+    finalApprovedAt: null,
+    files: uploadedFiles.map(f=>f.name),
+    history: [
+      { time:now, unit:'contractor', user:u.id, action:'提送文件', note:'' },
+      { time:now, unit:'supervisor', user:'', action:'文件送達', note:'' }
+    ]
+  };
+
+  documents.push(doc);
+  doc.history.forEach(h => actionLog.push({...h, docId:doc.id, docName:doc.name}));
+
+  // Store actual file blobs so they can be previewed later
+  if(uploadedFiles.length) storeFiles(doc.id, uploadedFiles);
+
+  // Reset form
+  uploadedFiles = [];
+  document.getElementById('uploadedFilesList').innerHTML = '';
+  document.getElementById('docName').value = '';
+  document.getElementById('docDesc').value = '';
+  document.getElementById('docCategory').value = '';
+  document.getElementById('docNo').value = 'DOC-'+new Date().getFullYear()+'-'+String(documents.length+1).padStart(3,'0');
+
+  showToast('文件已成功提送！');
+  showPage('doclist');
+}
+
+// ====================================================
+// FILE STORE  (docId -> [ {name, url, size, type} ])
+// ====================================================
+const fileStore = {};   // keyed by docId
+let currentViewFile = null;
+
+function storeFiles(docId, fileList) {
+  if(!fileStore[docId]) fileStore[docId] = [];
+  Array.from(fileList).forEach(f => {
+    // revoke old blob if same name
+    const existing = fileStore[docId].find(x=>x.name===f.name);
+    if(existing && existing.url) URL.revokeObjectURL(existing.url);
+    const url = URL.createObjectURL(f);
+    fileStore[docId] = fileStore[docId].filter(x=>x.name!==f.name);
+    fileStore[docId].push({ name: f.name, url, size: f.size, type: f.type });
+  });
+}
+
+function getFileObj(docId, fileName) {
+  return (fileStore[docId]||[]).find(x=>x.name===fileName) || null;
+}
+
+function getFileExt(name) {
+  return (name.split('.').pop()||'').toLowerCase();
+}
+
+function getFileIcon(name) {
+  const ext = getFileExt(name);
+  if(['pdf'].includes(ext)) return '📕';
+  if(['doc','docx'].includes(ext)) return '📘';
+  if(['xls','xlsx'].includes(ext)) return '📗';
+  if(['dwg','dxf'].includes(ext)) return '📐';
+  if(['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) return '🖼️';
+  if(['zip','rar','7z'].includes(ext)) return '📦';
+  return '📄';
+}
+
+function getExtClass(name) {
+  const ext = getFileExt(name);
+  if(ext==='pdf') return 'ext-pdf';
+  if(['doc','docx'].includes(ext)) return 'ext-doc';
+  if(['xls','xlsx'].includes(ext)) return 'ext-xls';
+  if(['jpg','jpeg','png','gif','webp'].includes(ext)) return 'ext-img';
+  if(['dwg','dxf'].includes(ext)) return 'ext-dwg';
+  return 'ext-other';
+}
+
+function formatFileSize(bytes) {
+  if(!bytes) return '';
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1024/1024).toFixed(1) + ' MB';
+}
+
+// Render a clickable file item (pass docId so we can look up blob URL)
+function renderFileItem(fileName, docId) {
+  const ext = getFileExt(fileName);
+  const icon = getFileIcon(fileName);
+  const extClass = getExtClass(fileName);
+  const fileObj = docId ? getFileObj(docId, fileName) : null;
+  const canPreview = fileObj && ['pdf','jpg','jpeg','png','gif','webp','bmp'].includes(ext);
+  const hasBlob = !!fileObj;
+
+  return `<div class="file-item" onclick="openFileViewer('${escQ(fileName)}','${docId||''}')">
+    <span class="file-icon">${icon}</span>
+    <span class="file-name">${escQ(fileName)}</span>
+    ${fileObj ? `<span style="font-size:11px;color:var(--c-gray-500);">${formatFileSize(fileObj.size)}</span>` : ''}
+    <span class="file-ext ${extClass}">${ext||'file'}</span>
+    <span class="file-preview-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      ${canPreview ? '預覽' : hasBlob ? '下載' : '檢視'}
+    </span>
+  </div>`;
+}
+
+function escQ(s) { return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function openFileViewer(fileName, docId) {
+  const fileObj = docId ? getFileObj(docId, fileName) : null;
+  const ext = getFileExt(fileName);
+  const icon = getFileIcon(fileName);
+
+  document.getElementById('fvIcon').textContent = icon;
+  document.getElementById('fvTitle').textContent = fileName;
+
+  let meta = ext.toUpperCase() + ' 檔案';
+  if(fileObj) meta += '　｜　' + formatFileSize(fileObj.size);
+  if(!fileObj) meta += '　（範例資料，無實際檔案）';
+  document.getElementById('fvMeta').textContent = meta;
+
+  currentViewFile = fileObj || null;
+
+  const body = document.getElementById('fvBody');
+
+  if(!fileObj) {
+    // Sample data — no real blob
+    body.innerHTML = `<div class="file-viewer-unavailable">
+      <div class="big-icon">${icon}</div>
+      <div class="filename">${fileName}</div>
+      <p>此為系統範例資料，<br>尚未上傳實際檔案內容。<br><br>實際使用時，由承辦單位上傳後即可在此直接預覽。</p>
+    </div>`;
+  } else if(['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) {
+    body.innerHTML = `<img src="${fileObj.url}" alt="${fileName}" style="max-width:100%;max-height:65vh;object-fit:contain;display:block;">`;
+  } else if(ext === 'pdf') {
+    body.innerHTML = `<iframe src="${fileObj.url}#toolbar=1&navpanes=0" style="width:100%;height:65vh;border:none;display:block;"></iframe>`;
+  } else {
+    body.innerHTML = `<div class="file-viewer-unavailable">
+      <div class="big-icon">${icon}</div>
+      <div class="filename">${fileName}</div>
+      <p>此格式（.${ext}）無法在瀏覽器內直接預覽，<br>請點擊「下載」按鈕開啟。</p>
+    </div>`;
+  }
+
+  document.getElementById('fileViewerModal').classList.add('open');
+}
+
+function downloadCurrentFile() {
+  if(!currentViewFile) { showToast('此為範例資料，無實際檔案可下載'); return; }
+  const a = document.createElement('a');
+  a.href = currentViewFile.url;
+  a.download = currentViewFile.name;
+  a.click();
+}
+
+// ====================================================
+// FILE UPLOAD
+// ====================================================
+function handleFileUpload(input) {
+  Array.from(input.files).forEach(f => {
+    if(!uploadedFiles.find(x=>x.name===f.name)) uploadedFiles.push(f);
+  });
+  renderUploadedFiles();
+}
+
+function renderUploadedFiles() {
+  document.getElementById('uploadedFilesList').innerHTML = uploadedFiles.map((f,i) => `
+    <div class="uploaded-file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+      ${f.name}
+      <span class="remove" onclick="removeFile(${i})">✕</span>
+    </div>`).join('');
+}
+
+function removeFile(i) { uploadedFiles.splice(i,1); renderUploadedFiles(); }
+
+function handleReturnFileUpload(input) {
+  Array.from(input.files).forEach(f => {
+    if(!returnFiles.find(x=>x.name===f.name)) returnFiles.push(f);
+  });
+  document.getElementById('returnFilesList').innerHTML = returnFiles.map((f,i) => `
+    <div class="uploaded-file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+      ${f.name}
+    </div>`).join('');
+}
+
+// ====================================================
+// LOG PAGE
+// ====================================================
+function renderLog() {
+  const search = document.getElementById('logSearch').value.toLowerCase();
+  let logs = [...actionLog].reverse();
+  if(search) logs = logs.filter(l => l.docId.toLowerCase().includes(search)||l.docName.toLowerCase().includes(search));
+
+  const actionColors = { '提送文件':'status-pending', '審查通過':'status-approved', '審查通過（最終核定）':'status-approved', '退回修正':'status-returned', '文件送達':'status-reviewing', '刪除文件':'status-returned' };
+
+  document.getElementById('logBody').innerHTML = logs.map(l => `
+    <tr>
+      <td style="font-family:monospace; color:var(--c-gray-500);">${l.time}</td>
+      <td><span class="doc-number">${l.docId}</span></td>
+      <td><span class="doc-link" onclick="showDocDetail('${l.docId}')">${l.docName}</span></td>
+      <td><span class="status-badge ${actionColors[l.action]||'status-pending'}"><span class="dot"></span>${l.action}</span></td>
+      <td><span class="unit-tag unit-${l.unit.replace('-','')}">${UNIT_SHORT[l.unit]||l.unit}</span></td>
+      <td style="font-size:12px;">${l.user||'—'}</td>
+      <td style="font-size:12px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${l.note||'—'}</td>
+    </tr>`).join('');
+}
+
+// ====================================================
+// STATS PAGE
+// ====================================================
+function renderStats() {
+  const monthly = documents.filter(d => d.submittedAt.startsWith('2025/01')).length;
+  const approved = documents.filter(d=>d.status==='approved');
+  const passRate = documents.length ? Math.round(approved.filter(d=>!d.history.find(h=>h.action==='退回修正')).length/documents.length*100) : 0;
+
+  document.getElementById('statsMonthly').textContent = monthly;
+  document.getElementById('statsAvgDays').textContent = '14 天';
+  document.getElementById('statsPassRate').textContent = passRate + '%';
+
+  // Category chart
+  const cats = {};
+  documents.forEach(d => { cats[d.category] = (cats[d.category]||0)+1; });
+  const ctx = document.getElementById('catChart').getContext('2d');
+  if(catChartInst) catChartInst.destroy();
+  catChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(cats),
+      datasets: [{ data: Object.values(cats), backgroundColor: '#2563a8', borderRadius: 4 }]
+    },
+    options: { responsive: false, plugins:{ legend:{display:false} }, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} }
+  });
+
+  // Unit stats
+  document.getElementById('unitStatsBody').innerHTML = [
+    { unit:'監造單位', received:6, done:5, avg:'2.3', inProgress:1 },
+    { unit:'業主工務所', received:4, done:3, avg:'3.1', inProgress:1 },
+    { unit:'業主總公司', received:3, done:2, avg:'4.2', inProgress:1 },
+  ].map(r=>`<tr>
+    <td>${r.unit}</td>
+    <td>${r.received}</td>
+    <td>${r.done}</td>
+    <td style="font-weight:600; color:var(--c-gold);">${r.avg} 天</td>
+    <td><span class="status-badge status-reviewing"><span class="dot"></span>${r.inProgress}</span></td>
+  </tr>`).join('');
+}
+
+// ====================================================
+// DELETE (業主工務所 only)
+// ====================================================
+let deletingDocId = null;
+
+function openDeleteModal(docId) {
+  const d = documents.find(x => x.id === docId);
+  if(!d) return;
+  deletingDocId = docId;
+
+  document.getElementById('deleteDocName').textContent = d.name;
+  document.getElementById('deleteDocMeta').textContent = d.id + '　｜　' + d.category + '　｜　' + d.version + '　｜　提送：' + d.submittedAt.split(' ')[0];
+  document.getElementById('deleteDocStatus').innerHTML = statusBadge(d.status);
+  document.getElementById('deleteReason').value = '';
+  document.getElementById('deleteReasonOther').value = '';
+  document.getElementById('deleteReasonOtherWrap').style.display = 'none';
+  document.getElementById('deletePassword').value = '';
+  document.getElementById('deleteError').style.display = 'none';
+
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+document.addEventListener('change', function(e) {
+  if(e.target && e.target.id === 'deleteReason') {
+    document.getElementById('deleteReasonOtherWrap').style.display =
+      e.target.value === '其他' ? 'block' : 'none';
+  }
+});
+
+function confirmDelete() {
+  const reason = document.getElementById('deleteReason').value;
+  const otherReason = document.getElementById('deleteReasonOther').value.trim();
+  const pwd = document.getElementById('deletePassword').value;
+  const errEl = document.getElementById('deleteError');
+
+  if(!reason) {
+    errEl.textContent = '請選擇刪除原因'; errEl.style.display = 'block'; return;
+  }
+  if(reason === '其他' && !otherReason) {
+    errEl.textContent = '請填寫說明'; errEl.style.display = 'block'; return;
+  }
+  if(pwd !== currentUser.pass) {
+    errEl.textContent = '密碼不正確，請重新輸入'; errEl.style.display = 'block';
+    document.getElementById('deletePassword').value = '';
+    return;
+  }
+
+  const d = documents.find(x => x.id === deletingDocId);
+  if(!d) return;
+
+  const finalReason = reason === '其他' ? otherReason : reason;
+  const now = new Date().toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'/');
+
+  // Write to action log before removing
+  actionLog.push({
+    time: now,
+    unit: currentUser.unit,
+    user: currentUser.id,
+    action: '刪除文件',
+    note: '刪除原因：' + finalReason,
+    docId: d.id,
+    docName: d.name
+  });
+
+  // Remove from documents array
+  const idx = documents.findIndex(x => x.id === deletingDocId);
+  if(idx !== -1) documents.splice(idx, 1);
+
+  closeModal('deleteModal');
+  deletingDocId = null;
+
+  showToast('文件「' + d.name + '」已刪除，操作已記錄。');
+  renderDocList();
+  renderDashboard();
+}
+
+// ====================================================
+// HELPERS
+// ====================================================
+function statusBadge(s) {
+  const m = { approved:['status-approved','已核定'], reviewing:['status-reviewing','審核中'], returned:['status-returned','退回修正'], pending:['status-pending','待提送'] };
+  const [cls, lbl] = m[s] || ['status-pending', s];
+  return `<span class="status-badge ${cls}"><span class="dot"></span>${lbl}</span>`;
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.style.display = 'flex';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>
