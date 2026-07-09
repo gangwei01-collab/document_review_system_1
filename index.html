@@ -2404,5 +2404,25 @@ function showToast(msg) {
   setTimeout(() => { t.style.display = 'none'; }, 3000);
 }
 </script>
+  <script>
+// 後端 API 基礎網址（本地測試用）
+const API_BASE = 'http://localhost:5000/api';
+
+// 測試連線按鈕（你可以加在網頁上）
+function testBackendConnection() {
+  fetch(`${API_BASE}/health`)
+    .then(response => response.json())
+    .then(data => {
+      alert('✅ 成功連接到後端！\n狀態：' + data.status);
+    })
+    .catch(error => {
+      alert('❌ 無法連接到後端，請確認後端伺服器有開啟\n錯誤：' + error.message);
+    });
+}
+
+// 你可以在 HTML 裡面加一個按鈕測試
+// <button onclick="testBackendConnection()">測試後端連線</button>
+</script>
 </body>
 </html>
+
